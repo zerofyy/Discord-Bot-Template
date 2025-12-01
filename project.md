@@ -12,25 +12,17 @@
 ❌  ├── 📁 extensions/
 ❌  │   ├── 📁 utility/
 ❌  │   │   ├── 📝 ping.py
-❌  │   │   ├── 📝 help.py
+❌  │   │   └── 📝 help.py
 ❌  │   ├── 📁 admin/
-❌  │   │   ├── 📝 settings.py
+❌  │   │   └── 📝 settings.py
 ❌  │   ├── 📁 creator/
 ❌  │   │   ├── 📝 logs.py
 ❌  │   │   ├── 📝 extension.py
 ❌  │   │   ├── 📝 restart.py
-❌  │   │   ├── 📝 sync.py
-❌  │   │   ├── 📝 destruct.py
-❌  │   │   ├── 📝 revive.py
-❌  │   ├── 📁 events/
-❌  │   │   ├── 📝 uptime.py
-❌  │   └── 📁 testing/
-❌  │       ├── 📝 test_find_member.py
-❌  │       ├── 📝 test_autocomplete.py
-❌  │       ├── 📝 test_perms_check.py
-❌  │       ├── 📝 test_cooldowns.py
-❌  │       ├── 📝 test_ext_helpers.py
-❌  │       └── 📝 test_errors.py
+❌  │   │   ├── 📝 test.py
+❌  │   │   └── 📝 sync.py
+❌  │   └── 📁 events/
+❌  │       └── 📝 uptime.py
 ❌  └── 📁 utils/
 ❌      ├── 📁 assets/
 ❌      │   ├── 📝 __init__.py
@@ -51,9 +43,12 @@
 ❌      ├── 📁 exceptions_manager/
 ❌      │   ├── 📝 __init__.py
 ❌      │   └── 📝 exceptions_manager.py
-❌      ├── 📁 functions/
+❌      ├── 📁 helpers/
 ❌      │   ├── 📝 __init__.py
 ❌      │   ├── 📝 misc.py
+❌      │   ├── 📁 testing/
+❌      │   │   ├── 📝 tests_manager.py
+❌      │   │   └── 📝 ...
 ❌      │   └── ...
 ❌      └── 📁 logging/
 ❌          ├── 📝 __init__.py
@@ -63,18 +58,16 @@
 ---
 
 # TODO
-- Figure out whether helpers will be part of `utils` or will they be somehow bundled along with the
-  extensions. **Note:** Multiple extensions may need to use the same helpers, so bundling them with each 
-  extension separately wouldn't work. However, helpers still need to allow reloading, meaning that
-  extensions need to have some sort of dependencies.
-- Figure out how extensions will be parsed. The simple way is through a big list of extensions saved in a
-  file. The other, more complex, way is to parse them by going through the extension folders. I'm not sure
-  how to fetch extension data from the file though.
+...
 
 ---
 
 # Latest Changes
-Created a project plan.
+Added project skeleton.
 
-- Added `project.md`.
-- Added `.gitignore`.
+- Renamed `utils/functions/` to `utils/helpers/`.
+- Removed `testing` folder from `extensions/`.
+- Removed `destruct.py` and `revive.py` from `extensions/creator/`.
+- Added `test.py` to `extensions/creator/`.
+- Added `testing` folder to `utils/helpers/`.
+- Updated `project.md`.
