@@ -28,11 +28,11 @@
 ❌      │   ├── 📝 __init__.py
 ❌      │   ├── 📝 emojis.py
 ❌      │   └── 📝 coloring.py
-❌      ├── 📁 core/
-❌      │   ├── 📝 __init__.py
-❌      │   ├── 📝 bot.py
-❌      │   ├── 📝 database.py
-❌      │   └── 📝 installer.py
+✅      ├── 📁 core/
+✅      │   ├── 📝 __init__.py
+✅      │   ├── 📝 bot.py
+✅      │   ├── 📝 database.py
+✅      │   └── 📝 installer.py
 ❌      ├── 📁 extension_manager/
 ❌      │   ├── 📝 __init__.py
 ❌      │   ├── 📝 extension.py
@@ -57,17 +57,30 @@
 
 ---
 
+# Database Structure
+```
+📦 Database
+├── 📁 example_collection
+│   ├── 🔹 example_attribute_1: str
+│   └── 🔹 example_attribute_2: int
+└── ...
+```
+
+---
+
 # TODO
 ...
 
 ---
 
 # Latest Changes
-Added project skeleton.
+Finished the `core` module.
 
-- Renamed `utils/functions/` to `utils/helpers/`.
-- Removed `testing` folder from `extensions/`.
-- Removed `destruct.py` and `revive.py` from `extensions/creator/`.
-- Added `test.py` to `extensions/creator/`.
-- Added `testing` folder to `utils/helpers/`.
+- Finished the `utils/core/` module.
+  - Added imports to `__init__.py`.
+  - Added a singleton wrapper for the Discord bot client in `bot.py`.
+  - Added a singleton wrapper for the Mongo databae in `database.py`.
+  - Added a static class for installing python modules (requirements) in `installer.py`.
+- Updated `requirements.txt`.
+- Added a database structure example to `project.md` for future reference.
 - Updated `project.md`.
