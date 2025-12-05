@@ -1,5 +1,9 @@
 from pymongo.mongo_client import MongoClient
-from pymongo.collection import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult, Database
+from pymongo.database import Database
+from pymongo.collection import InsertOneResult, InsertManyResult, DeleteResult, UpdateResult
+
+import os
+import dotenv
 
 
 class DB:
@@ -11,7 +15,7 @@ class DB:
 
 
     def __new__(cls) -> 'DB':
-        """ Create an instance of the DB class, or get the instance if already created. """
+        """ Create an instance of the DB class or get an already existing instance. """
 
         if cls._instance is None:
             cls._instance = super(DB, cls).__new__(cls)
@@ -19,13 +23,22 @@ class DB:
         return cls._instance
 
 
-    def setup(self, db_url: str) -> None:
+    def setup(self, db_url: str = None) -> None:
         """
         Set up the Mongo database.
 
+        ------
+
         Arguments:
-             db_url: A MongoDB connection url.
+             db_url: A MongoDB connection url. Defaults to loading from the "DB_URL" environmental variable.
         """
+
+        if db_url is None:
+            dotenv.load_dotenv()
+            db_url = os.getenv('DB_URL')
+
+            if not db_url:
+                raise ValueError('DB_URL not found in environment variables.')
 
         self.client = MongoClient(db_url)
         self.database = self.client['Database']
@@ -36,10 +49,14 @@ class DB:
         """
         Find documents in a database collection.
 
+        ------
+
         Arguments:
              collection: Name of the database collection.
              query: The search query.
              find_many: Whether to find all documents that satisfy the query or stop at the first one.
+
+        ------
 
         Returns:
             The documents or None if not found.
@@ -56,9 +73,13 @@ class DB:
         """
         Insert documents to a database collection.
 
+        ------
+
         Arguments:
             collection: Name of the database collection.
             data: The document(s) to insert.
+
+        ------
 
         Returns:
             The result of inserting documents.
@@ -74,10 +95,14 @@ class DB:
         """
         Delete documents from a database collection.
 
+        ------
+
         Arguments:
              collection: Name of the database collection.
              query: The search query.
              delete_many: Whether to delete all documents that satisfy the query or just the first one.
+
+        ------
 
         Returns:
             The result of deleting documents.
@@ -96,12 +121,16 @@ class DB:
 
         Update modifications: https://www.mongodb.com/docs/upcoming/reference/mql/update/#std-label-update-operators
 
+        ------
+
         Arguments:
             collection: Name of the database collection.
             query: The search query.
             updates: Update modifications to apply onto the documents.
             update_many: Whether to update all documents that satisfy the query or just the first one.
             upsert: Whether to insert a new document if no documents satisfy the query.
+
+        ------
 
         Returns:
             The result of updating documents.

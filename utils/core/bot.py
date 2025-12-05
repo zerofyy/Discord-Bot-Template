@@ -6,7 +6,7 @@ import dotenv
 
 
 class Bot:
-    """ Singleton wrapper for the Discord bot client. """
+    """ Singleton wrapper for the Discord client. """
 
     _instance: 'Bot' = None
     prefix: str = None
@@ -14,7 +14,7 @@ class Bot:
 
 
     def __new__(cls) -> 'Bot':
-        """ Create an instance of the Bot class, or get the instance if already created. """
+        """ Create an instance of the Bot class or get an already existing instance. """
         
         if cls._instance is None:
             cls._instance = super(Bot, cls).__new__(cls)
@@ -25,7 +25,9 @@ class Bot:
     def setup(self, hook: type[commands.Bot], prefix: str, intents: discord.Intents = discord.Intents.none(),
               mentions: discord.AllowedMentions = discord.AllowedMentions.none()) -> None:
         """
-        Set up the Discord bot client.
+        Set up the Discord client.
+
+        ------
 
         Arguments:
             hook: A commands.Bot subclass with a custom setup_hook function.
@@ -46,16 +48,25 @@ class Bot:
         )
 
 
-    def run(self) -> None:
-        """ Run the Discord bot client. """
+    def run(self, token: str = None) -> None:
+        """
+        Run the Discord client.
+
+        ------
+
+        Arguments:
+            token: The Discord client token. Defaults to loading it from the "BOT_TOKEN" environment variable.
+        """
 
         if self.client is None:
             raise RuntimeError('The bot must be set up before running.')
 
-        dotenv.load_dotenv()
-        token = os.getenv('BOT_TOKEN')
-        if not token:
-            raise ValueError('BOT_TOKEN not found in environment variables.')
+        if token is None:
+            dotenv.load_dotenv()
+            token = os.getenv('BOT_TOKEN')
+
+            if not token:
+                raise ValueError('BOT_TOKEN not found in environment variables.')
 
         self.client.run(token)
 

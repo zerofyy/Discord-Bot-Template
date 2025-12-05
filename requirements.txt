@@ -2,3 +2,4 @@ discord
 pymongo
 packaging
 python-dotenv
+sty
