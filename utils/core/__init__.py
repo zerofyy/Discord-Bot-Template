@@ -1,3 +1,8 @@
-from .bot import *
-from .database import *
+try:
+    from .bot import *
+    from .database import *
+
+except ImportError:
+    pass
+
 from .installer import *

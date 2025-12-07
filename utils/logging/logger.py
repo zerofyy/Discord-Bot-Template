@@ -6,6 +6,7 @@ import discord
 
 import logging
 import os
+import sys
 from pathlib import Path
 import asyncio
 
@@ -72,8 +73,6 @@ class Logger:
             new_file: Whether to start a new logs file.
         """
 
-        Coloring.init()
-
         # Set up log levels
         self.INFO = LogLevel('[i]', Emoji.info, Text.li_blue, Coloring.blue)
         self.OK = LogLevel('[o]', Emoji.success, Text.li_green, Coloring.green)
@@ -86,6 +85,14 @@ class Logger:
         # Start a new logs file
         if new_file:
             self.new_file()
+
+        # Log uncaught errors before crashing
+        def new_excepthook(exc_type, value, traceback):
+            self.critical('Crash Report', f'Type      : {exc_type}\n'
+                                          f'Value     : {value}\n'
+                                          f'Traceback : {traceback}')
+        sys.excepthook = new_excepthook
+        self.ok('Logger', 'Successfully configured the system exception hook.')
 
         # Set up handling for Discord logs
         handler = LogsHandler()
@@ -180,7 +187,7 @@ class Logger:
         file_entry = f'{file_format} {lines[0]}'
         cons_entry = f'{cons_format} {color}{lines[0]}'
 
-        spacing = ' ' * len(file_entry)
+        spacing = ' ' * len(file_format)
         for line in lines[1:]:
             file_entry += f'\n{spacing} {line}'
             cons_entry += f'\n{spacing} {color}{line}'
@@ -332,10 +339,11 @@ class Logger:
                 return self.file
 
             case 'last':
-                return max(files, key = lambda x: x.stat().st_ctime)
+                file = max(files, key = lambda x: x.stat().st_ctime)
+                return f'logs/{file.name}'
 
             case 'all':
-                return files
+                return [f'logs/{file.name}' for file in files]
 
             case _:
                 self.error(

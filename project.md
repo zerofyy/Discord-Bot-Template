@@ -1,9 +1,9 @@
 # Project Structure
 ```
     📦 Project
-❌  ├── 📝 main.py
-❌  ├── 📝 requirements.txt
-❌  ├── 📝 .env
+🔄  ├── 📝 main.py
+🔄  ├── 📝 requirements.txt
+✅  ├── 📝 .env
 ✅  ├── 📝 .gitignore
 ✅  ├── 📝 project.md
 ❌  ├── 📝 README.md
@@ -28,7 +28,9 @@
 ✅      │   ├── 📝 __init__.py
 ✅      │   ├── 📝 emojis.py
 ✅      │   ├── 📝 constants.py
-✅      │   └── 📝 coloring.py
+✅      │   ├── 📝 coloring.py
+✅      │   ├── 📝 command_args.py
+✅      │   └── 📝 logo.txt
 ✅      ├── 📁 core/
 ✅      │   ├── 📝 __init__.py
 ✅      │   ├── 📝 bot.py
@@ -53,7 +55,8 @@
 ❌      │   └── ...
 ✅      └── 📁 logging/
 ✅          ├── 📝 __init__.py
-✅          └── 📝 logger.py
+✅          ├── 📝 logger.py
+✅          └── 📝 plain_logger.py
 ```
 
 ---
@@ -70,11 +73,41 @@
 ---
 
 # TODO
-...
+- Check if `Installer` is Linux friendly.
+- Update the `PlainLogger` with log file functionality.
+- Make it so log files can be shared between both loggers, perhaps through a command-line argument.
 
 ---
 
 # Changelogs
+
+### Changelog 07.12.25A
+Updated the `Installer` module and added command-line arguments.
+
+- Updates and fixes to the `Installer` module:
+  - Fixed a major oversight where the module would import non-builtin packages before installing them, causing the
+    program to crash.
+  - Fixed the `restart()` function making an incorrect system call to restart the application. It now uses the correct
+    Python executable and retains command-line arguments.
+  - Added the option to clear cached requirements and modules to the `restart()` function. 
+  - Added a safeguard to prevent crashing when the `packaging` requirement is missing. The module handles this issue by
+    installing the package and restarting the application.
+  - Replaced `Logger` with `PlainLogger` to avoid dependencies.
+  - Added safeguards to all `__init__.py` files in `utils/`.
+- Updates and fixes to `utils/logging/`:
+  - Added a basic, static `PlainLogger` module that only relies on built-in packages.
+  - Added imports to `__init__.py`.
+  - Removed the `Coloring.init()` call from the `Logger.setup()` function. Coloring is now initialized in `main.py`.
+  - Updated the `Logger.setup()` function to configure the system exception hook in order to log crash reports.
+  - Fixed the spacing in the `Logger._log()` function.
+  - Fixed the `Logger.get_path()` function returning `Path` objects instead of strings.
+- Updates to `utils/assets/`:
+  - Added a static `CommandArgs` module for defining and parsing command-line arguments.
+  - Added imports to `__init__.py`.
+  - Added a `logo.txt` file with a logo made from ASCII art. Very important.
+- Restructured the code in `main.py`.
+- Updated `project.md`.
+
 
 ### Changelog 05.12.25A
 Finished the `assets` and `logging` modules.
