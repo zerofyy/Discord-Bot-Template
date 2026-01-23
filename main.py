@@ -2,6 +2,29 @@ import time
 
 from utils.core import Installer
 from utils.assets import CommandArgs
+from utils.logging import PlainLogger
+
+try:
+    from discord.ext import commands
+
+    from utils.core import Bot
+    from utils.logging import Logger
+    from utils.assets import Coloring
+    # from utils.extension_manager import ExtManager
+
+except ImportError:
+    commands = Bot = Logger = Coloring = ExtManager = None
+    PlainLogger.error('Main', 'One or more modules failed to import, likely due to missing requirements.')
+
+    bad_reqs = Installer.check_requirements()
+    PlainLogger.warning('Main', 'Attempting to fix all bad requirements.')
+    for module, info in bad_reqs.items():
+        if info == 'missing':
+            Installer.install_module(module)
+        else:
+            Installer.update_module(module)
+
+    Installer.restart()
 
 
 time_start = time.time()
@@ -15,14 +38,6 @@ CommandArgs.parse()
 # Install requirements
 if CommandArgs.install:
     Installer.ensure_requirements()
-
-
-from discord.ext import commands
-
-from utils.core import Bot
-from utils.logging import Logger
-from utils.assets import Coloring
-# from utils.extension_manager import ExtManager
 
 
 # Initialization

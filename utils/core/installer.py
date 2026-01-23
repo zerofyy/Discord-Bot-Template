@@ -173,7 +173,7 @@ class Installer:
 
 
     @staticmethod
-    def restart(clear_cache: bool = True) -> None:
+    def restart(clear_cache: bool = True, cmd_args: list[str] = None) -> None:
         """
         Restart the application.
 
@@ -181,6 +181,7 @@ class Installer:
 
         Arguments:
             clear_cache: Whether to clear the cache before restarting.
+            cmd_args: Additional command-line arguments to use after the restart.
         """
 
         if clear_cache:
@@ -213,7 +214,9 @@ class Installer:
         time.sleep(2)
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        cmd_args = ' '.join(sys.argv[1:])
+        cmd_args = sys.argv[1:] + cmd_args if cmd_args else sys.argv[1:]
+        cmd_args = ' '.join(cmd_args)
+
         os.system(f'"{sys.executable}" main.py {cmd_args}')
         sys.exit(0)
 

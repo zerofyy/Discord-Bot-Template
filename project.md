@@ -81,6 +81,14 @@
 
 # Changelogs
 
+### Changelog 23.01.26A
+Installer updates.
+
+- Added the option to pass additional command-line arguments to `Installer.restart()`.
+- Moved the imports in `main.py` to the top and made it so it automatically attempts to install missing requirements if
+  the imports fail.
+- Updated `project.md`.
+
 ### Changelog 07.12.25A
 Updated the `Installer` module and added command-line arguments.
 
