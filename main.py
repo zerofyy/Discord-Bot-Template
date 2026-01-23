@@ -2,55 +2,64 @@ import time
 
 from utils.core import Installer
 from utils.assets import CommandArgs
-from utils.logging import PlainLogger
+from utils.logging import Logger
 
 try:
     from discord.ext import commands
 
     from utils.core import Bot
-    from utils.logging import Logger
     from utils.assets import Coloring
     # from utils.extension_manager import ExtManager
 
+    _DEPENDENCIES_AVAILABLE = True
+
+    Bot = Bot()
+    Coloring.init()
+
+    with open('utils/assets/logo.txt', 'r') as file:
+        print(Coloring.gradient(file.read(), start = (114, 137, 218), end = (204, 112, 216)))
+
 except ImportError:
-    commands = Bot = Logger = Coloring = ExtManager = None
-    PlainLogger.error('Main', 'One or more modules failed to import, likely due to missing requirements.')
+    commands = Bot = Coloring = ExtManager = None
 
-    bad_reqs = Installer.check_requirements()
-    PlainLogger.warning('Main', 'Attempting to fix all bad requirements.')
-    for module, info in bad_reqs.items():
-        if info == 'missing':
-            Installer.install_module(module)
-        else:
-            Installer.update_module(module)
+    _DEPENDENCIES_AVAILABLE = False
 
-    Installer.restart()
+    with open('utils/assets/logo.txt', 'r') as file:
+        print(file.read())
 
 
 time_start = time.time()
-
-
-# Parse command-line arguments
 CommandArgs.define()
 CommandArgs.parse()
+Logger = Logger()
 
 
-# Install requirements
+if CommandArgs.logs_file is None:
+    Logger.setup()
+else:
+    Logger.setup(new_file = False)
+    Logger.set_file(CommandArgs.logs_file)
+
 if CommandArgs.install:
     Installer.ensure_requirements()
 
+    if not _DEPENDENCIES_AVAILABLE:
+        Installer.restart()
 
-# Initialization
-Coloring.init()
-with open('utils/assets/logo.txt', 'r') as file:
-    print(Coloring.gradient(file.read(), start = (114, 137, 218), end = (204, 112, 216)))
+elif not _DEPENDENCIES_AVAILABLE:
+    Logger.critical('Main', 'One or more modules failed to import, likely due to missing requirements.')
+    Logger.info('Main', 'The program cannot continue without installing the necessary modules.')
 
-Bot = Bot()
-Logger = Logger()
-Logger.setup()
+    if input(' ' * 53 + 'Would you like to run the installer? [y/n] : ').lower().startswith('y'):
+        Logger.info('Main', 'User agreed to run the installer.')
+        Installer.restart(cmd_args = ['--install', '--logs-file', Logger.get_path('current')])
+    else:
+        Logger.info('Main', 'User did not agree to run the installer.')
+        Logger.info('Main', 'Shutting down...')
+        time.sleep(2)
+        exit(0)
 
 
-# Create Discord client setup hook
 class DiscordClientHook(commands.Bot):
     async def setup_hook(self) -> None:
         # Load extensions
@@ -61,6 +70,7 @@ class DiscordClientHook(commands.Bot):
         pass
 
 Bot.setup(DiscordClientHook, prefix = CommandArgs.prefix if CommandArgs.prefix else '>')
+Logger.refresh_globals()
 client = Bot.client
 
 @client.event  # may not be needed

@@ -56,7 +56,6 @@
 ✅      └── 📁 logging/
 ✅          ├── 📝 __init__.py
 ✅          ├── 📝 logger.py
-✅          └── 📝 plain_logger.py
 ```
 
 ---
@@ -73,13 +72,28 @@
 ---
 
 # TODO
-- Check if `Installer` is Linux friendly.
-- Update the `PlainLogger` with log file functionality.
-- Make it so log files can be shared between both loggers, perhaps through a command-line argument.
+- Extensions Manager.
+- Exceptions Manager.
 
 ---
 
 # Changelogs
+
+### Changelog 24.01.26A
+Logger dependency handling and Installer compatibility update.
+
+- Removed the `PlainLogger` module.
+- Updates to the existing `Logger`:
+  - Implemented handling of missing dependencies.
+  - Added a `--logs-file` command-line argument to set a specific logs file.
+  - Added safety checks to the following functions: `setup()`, `_report()`, `archive()`.
+  - The `set_file()` function no longer reports logs to Discord.
+  - Fixed the `_log()` function not adding new lines when writing log files.
+- Updates to `Installer`:
+  - The `restart()` function is now compatible with both Windows and Linux, and properly retains command-line arguments.
+  - Now uses the existing `Logger` instead of the previous `PlainLogger`.
+- Restructured the code in `main.py` to support the new changes.
+- Updated `project.md`.
 
 ### Changelog 23.01.26A
 Installer updates.

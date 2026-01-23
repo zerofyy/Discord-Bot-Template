@@ -1,18 +1,30 @@
-from utils.core import Bot
-from utils.helpers import Misc
-from utils.assets import Coloring, Emoji, Channels
-
-import discord
-
 import logging
 import os
 import sys
 from pathlib import Path
 import asyncio
+import datetime
 
 
-client = Bot().client
-Text = Coloring.Text
+try:
+    from utils.core import Bot
+    from utils.helpers import Misc
+    from utils.assets import Coloring, Emoji, Channels
+
+    import discord
+
+    client = Bot().client
+    Text = Coloring.Text
+
+    _DEPENDENCIES_AVAILABLE = True
+
+except ImportError as e:
+    Bot = Misc = Coloring = Emoji = Channels = discord = None
+
+    client = None
+    Text = None
+
+    _DEPENDENCIES_AVAILABLE = False
 
 
 class LogLevel:
@@ -44,7 +56,9 @@ class Logger:
     """ Singleton class for logging. """
 
     _instance: 'Logger' = None
+    _is_setup: bool = False
     file: str = None
+    get_current_time: callable = None
 
     INFO: LogLevel = None
     OK: LogLevel = None
@@ -63,6 +77,20 @@ class Logger:
         return cls._instance
 
 
+    def refresh_globals(self) -> None:
+        """ Refresh global variables. """
+
+        global client, Text
+
+        if _DEPENDENCIES_AVAILABLE:
+            client = Bot().client
+            Text = Coloring.Text
+            self.ok('Logger', 'Successfully refreshed global variables.')
+            return
+
+        self.warning('Logger', 'Failed to refresh global variables due to missing dependencies.')
+
+
     def setup(self, new_file: bool = True) -> None:
         """
         Set up the Logger.
@@ -73,13 +101,34 @@ class Logger:
             new_file: Whether to start a new logs file.
         """
 
+        if self._is_setup:
+            self.warning('Logger', 'Logger is already set up.')
+            return
+
+        # Set up time function
+        def get_current_time(time_format: str = '%d-%m-%Y %H:%M:%S', as_dt: bool = False):
+            datetime_now = datetime.datetime.now(tz = None).replace(microsecond = 0)
+            return datetime_now if as_dt else datetime_now.strftime(time_format)
+
+        self.get_current_time = Misc.get_current_time if _DEPENDENCIES_AVAILABLE else get_current_time
+
         # Set up log levels
-        self.INFO = LogLevel('[i]', Emoji.info, Text.li_blue, Coloring.blue)
-        self.OK = LogLevel('[o]', Emoji.success, Text.li_green, Coloring.green)
-        self.WARNING = LogLevel('[!]', Emoji.warning, Text.li_yellow, Coloring.yellow)
-        self.ERROR = LogLevel('[-]', Emoji.error, Text.li_red, Coloring.red)
-        self.CRITICAL = LogLevel('[X]', Emoji.danger, Text.red, Coloring.pink)
-        self.DEFAULT = LogLevel('[_]', Emoji.question, Text.rs, Coloring.white)
+        if _DEPENDENCIES_AVAILABLE:
+            lvl_info = [Emoji.info, Text.li_blue, Coloring.blue]
+            lvl_ok = [Emoji.success, Text.li_green, Coloring.green]
+            lvl_warning = [Emoji.warning, Text.li_yellow, Coloring.yellow]
+            lvl_error = [Emoji.error, Text.li_red, Coloring.red]
+            lvl_critical = [Emoji.danger, Text.red, Coloring.pink]
+            lvl_default = [Emoji.question, Text.rs, Coloring.white]
+        else:
+            lvl_info = lvl_ok = lvl_warning = lvl_error = lvl_critical = lvl_default = ['', '', 0]
+
+        self.INFO = LogLevel('[i]', *lvl_info)
+        self.OK = LogLevel('[o]', *lvl_ok)
+        self.WARNING = LogLevel('[!]', *lvl_warning)
+        self.ERROR = LogLevel('[-]', *lvl_error)
+        self.CRITICAL = LogLevel('[X]', *lvl_critical)
+        self.DEFAULT = LogLevel('[_]', *lvl_default)
         self.ok('Logger', 'Successfully created log levels.')
 
         # Start a new logs file
@@ -95,40 +144,45 @@ class Logger:
         self.ok('Logger', 'Successfully configured the system exception hook.')
 
         # Set up handling for Discord logs
-        handler = LogsHandler()
-        handler.setFormatter(logging.Formatter('%(message)s'))
+        if _DEPENDENCIES_AVAILABLE:
+            handler = LogsHandler()
+            handler.setFormatter(logging.Formatter('%(message)s'))
 
-        discord_loggers = [
-            'discord',
-            'discord.client',
-            'discord.gateway',
-            'discord.http',
-            'discord.state',
-            'discord.voice_state',
-            'discord.gateway',
-            'discord.ext.commands'
-        ]
+            discord_loggers = [
+                'discord',
+                'discord.client',
+                'discord.gateway',
+                'discord.http',
+                'discord.state',
+                'discord.voice_state',
+                'discord.gateway',
+                'discord.ext.commands'
+            ]
 
-        for disc_logger in discord_loggers:
-            disc_logger = logging.getLogger(disc_logger)
+            for disc_logger in discord_loggers:
+                disc_logger = logging.getLogger(disc_logger)
 
-            for disc_handler in disc_logger.handlers:
-                disc_logger.removeHandler(disc_handler)
+                for disc_handler in disc_logger.handlers:
+                    disc_logger.removeHandler(disc_handler)
 
-            disc_logger.addHandler(handler)
-            disc_logger.setLevel(logging.INFO)
-            disc_logger.propagate = False
+                disc_logger.addHandler(handler)
+                disc_logger.setLevel(logging.INFO)
+                disc_logger.propagate = False
 
-        self.ok('Logger', 'Successfully configured Discord loggers.')
+            self.ok('Logger', 'Successfully configured Discord loggers.')
+
+        else:
+            self.info('Logger', 'Skipped Discord loggers configuration.')
 
         # Set up done
+        self._is_setup = True
         self.ok('Logger', 'Finished setting up.')
 
 
     def new_file(self) -> None:
         """ Start a new logs file. """
 
-        time = Misc.get_current_time(time_format = '%d-%m-%Y %H-%M-%S')
+        time = self.get_current_time(time_format = '%d-%m-%Y %H-%M-%S')
         self.file = f'logs/{time}.log'
         self.ok('Logger', 'Successfully started a new logs file.')
 
@@ -144,11 +198,11 @@ class Logger:
         """
 
         if not Path(path).exists():
-            self.error('Logger', f'Failed to change the logs file to "{path}".', report = True)
+            self.error('Logger', f'Failed to change the logs file to "{path}".')
             return
 
         self.file = path
-        self.ok('Logger', f'Successfully changed the logs file to "{path}".', report = True)
+        self.ok('Logger', f'Successfully changed the logs file to "{path}".')
 
 
     def get_level_info(self, level: str) -> tuple[str, str, str, int]:
@@ -177,19 +231,21 @@ class Logger:
     def _log(self, level: str, title: str, message: str, report: bool = False) -> None:
         """ Helper function for making log entries. """
 
-        time = Misc.get_current_time()
+        time = self.get_current_time()
         code, _, color, _ = self.get_level_info(level)
 
+        time_color, title_color = (Text.li_cyan, Text.li_magenta) if _DEPENDENCIES_AVAILABLE else ('', '')
+
         file_format = f'{code} [{time}][{title.center(25)}]'
-        cons_format = f'{color}{code} {Text.li_cyan}[{time}]{Text.li_magenta}[{title.center(25)}]'
+        cons_format = f'{color}{code} {time_color}[{time}]{title_color}[{title.center(25)}]'
 
         lines = message.split('\n')
-        file_entry = f'{file_format} {lines[0]}'
+        file_entry = f'{file_format} {lines[0]}\n'
         cons_entry = f'{cons_format} {color}{lines[0]}'
 
         spacing = ' ' * len(file_format)
         for line in lines[1:]:
-            file_entry += f'\n{spacing} {line}'
+            file_entry += f'\n{spacing} {line}\n'
             cons_entry += f'\n{spacing} {color}{line}'
 
         print(cons_entry)
@@ -205,6 +261,10 @@ class Logger:
     async def _report(self, level: str, title: str, message: str) -> None:
         """ Helper function for sending log entries to Discord. """
 
+        if not _DEPENDENCIES_AVAILABLE:
+            self.error('Logger', 'Unable to report logs to Discord due to missing dependencies.')
+            return
+
         level = level.lower()
         if level in ['warning', 'error', 'critical']:
             channel = client.get_channel(Channels.errors)
@@ -212,7 +272,7 @@ class Logger:
             channel = client.get_channel(Channels.logs)
 
         _, emoji, _, color = self.get_level_info(level)
-        embed = discord.Embed(color = color, description = message, timestamp = Misc.get_current_time(as_dt = True))
+        embed = discord.Embed(color = color, description = message, timestamp = self.get_current_time(as_dt = True))
         await channel.send(f'### {emoji} {title}', embed = embed)
 
 
@@ -361,6 +421,10 @@ class Logger:
         Arguments:
              path: The logs file path.
         """
+
+        if not _DEPENDENCIES_AVAILABLE:
+            self.error('Logger', 'Unable to archive logs due to missing dependencies.')
+            return
 
         file = Path(path)
         if not file.exists() or not file.is_file():

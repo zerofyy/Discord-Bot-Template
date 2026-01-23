@@ -4,7 +4,10 @@ import subprocess
 import time
 from importlib import metadata
 
-from utils.logging import PlainLogger
+from utils.logging import Logger
+
+
+Logger = Logger()
 
 
 try:
@@ -21,7 +24,7 @@ except ModuleNotFoundError:
             name = None
             specifier = None
 
-            def __init__(self, _):
+            def __init__(self):
                 pass
 
 
@@ -42,7 +45,7 @@ class Installer:
              A dictionary with missing or outdated requirements.
         """
 
-        PlainLogger.info('Installer', 'Checking requirements...')
+        Logger.info('Installer', 'Checking requirements...')
 
         with open('requirements.txt', 'r') as file:
             lines = file.readlines()
@@ -57,12 +60,12 @@ class Installer:
 
             if not is_ok:
                 bad_modules[module.name] = info
-                PlainLogger.warning('Installer', f'Module "{module.name}" is {info}.')
+                Logger.warning('Installer', f'Module "{module.name}" is {info}.')
 
             else:
-                PlainLogger.ok('Installer', f'Module "{module.name}" is up to date.')
+                Logger.ok('Installer', f'Module "{module.name}" is up to date.')
 
-        PlainLogger.ok('Installer', 'Finished checking requirements.')
+        Logger.ok('Installer', 'Finished checking requirements.')
         return bad_modules
 
 
@@ -108,13 +111,13 @@ class Installer:
              module: The python module to install with optional version specifiers.
         """
 
-        PlainLogger.info('Installer', f'Installing module "{module}"...')
+        Logger.info('Installer', f'Installing module "{module}"...')
         subprocess.check_call(
             [sys.executable, '-m', 'pip', 'install', module],
             stdout = subprocess.PIPE, stderr = subprocess.PIPE
         )
 
-        PlainLogger.ok('Installer', f'Successfully installed module "{module}".')
+        Logger.ok('Installer', f'Successfully installed module "{module}".')
 
 
     @staticmethod
@@ -128,20 +131,20 @@ class Installer:
              module: The python module to update with optional version specifiers.
         """
 
-        PlainLogger.info('Installer', f'Updating module "{module}"...')
+        Logger.info('Installer', f'Updating module "{module}"...')
         subprocess.check_call(
             [sys.executable, '-m', 'pip', 'install', module, '--upgrade'],
             stdout = subprocess.PIPE, stderr = subprocess.PIPE
         )
 
-        PlainLogger.ok('Installer', f'Successfully updated module "{module}".')
+        Logger.ok('Installer', f'Successfully updated module "{module}".')
 
 
     @staticmethod
     def ensure_requirements() -> None:
         """ Check for and install any missing or outdated requirements. """
 
-        PlainLogger.ok('Installer', f'Checking requirements...')
+        Logger.ok('Installer', f'Checking requirements...')
 
         with open('requirements.txt', 'r') as file:
             lines = file.readlines()
@@ -155,10 +158,10 @@ class Installer:
 
             module, is_ok, info = Installer.check_module(line)
             if is_ok:
-                PlainLogger.ok('Installer', f'Module "{module.name}" is up to date.')
+                Logger.ok('Installer', f'Module "{module.name}" is up to date.')
                 continue
 
-            PlainLogger.warning('Installer', f'Module "{module.name}" is {info}.')
+            Logger.warning('Installer', f'Module "{module.name}" is {info}.')
 
             if info == 'missing':
                 Installer.install_module(line)
@@ -185,10 +188,10 @@ class Installer:
         """
 
         if clear_cache:
-            PlainLogger.warning('Installer', 'Preparing for restart...')
+            Logger.warning('Installer', 'Preparing for restart...')
             time.sleep(2)
 
-            PlainLogger.info('Installer', 'Collecting cached modules...')
+            Logger.info('Installer', 'Collecting cached modules...')
 
             with open('requirements.txt', 'r') as file:
                 lines = file.readlines()
@@ -205,26 +208,31 @@ class Installer:
                         cached_modules.append(module)
                         break
 
-            PlainLogger.info('Installer', 'Clearing cached modules...')
+            Logger.info('Installer', 'Clearing cached modules...')
             for module in cached_modules:
                 del sys.modules[module]
-                PlainLogger.info('Installer', f'Cleared module "{module}" from cache.')
+                Logger.info('Installer', f'Cleared module "{module}" from cache.')
 
-        PlainLogger.warning('Installer', 'Restarting...')
-        time.sleep(2)
-        os.system('cls' if os.name == 'nt' else 'clear')
+        Logger.warning('Installer', 'Restarting...')
 
-        cmd_args = sys.argv[1:] + cmd_args if cmd_args else sys.argv[1:]
-        cmd_args = ' '.join(cmd_args)
+        python = sys.executable
+        script = os.path.abspath(sys.argv[0])
+        cmd_args = sys.argv[1:] + (cmd_args if cmd_args else [])
 
-        os.system(f'"{sys.executable}" main.py {cmd_args}')
-        sys.exit(0)
+        if os.name == 'nt':
+            os.system('cls')
+            sys.exit(subprocess.call([python, script] + cmd_args))
+
+        else:
+            os.system('clear')
+            os.execv(python, [python, script] + cmd_args)
 
 
 if not _PACKAGING_AVAILABLE:
-    PlainLogger.error('Installer', 'Module "packaging" is missing.')
+    Logger.setup()
+    Logger.error('Installer', 'Module "packaging" is missing.')
     Installer.install_module('packaging')
-    Installer.restart(clear_cache = False)
+    Installer.restart(clear_cache = False, cmd_args = ['--logs-file', Logger.get_path('current')])
 
 
 __all__ = ['Installer']

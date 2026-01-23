@@ -11,6 +11,7 @@ class CommandArgs:
     prefix: str = None
     restart_feedback_channel: int = None
     restart_feedback_message: int = None
+    logs_file: str = None
 
 
     @staticmethod
@@ -39,6 +40,11 @@ class CommandArgs:
             '--restart-feedback-message', type = int, required = False,
             help = 'Set the restart feedback message ID. This argument is set automatically when restarting the bot '
                    'through a command and should not be set manually.'
+        )
+
+        parser.add_argument(
+            '--logs-file', type = str, required = False,
+            help = 'Set a specific logs file by providing the file path.'
         )
 
         CommandArgs.parser = parser

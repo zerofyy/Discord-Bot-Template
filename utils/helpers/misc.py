@@ -8,7 +8,7 @@ class Misc:
 
     @staticmethod
     def get_current_time(seconds_only: bool = False,  as_dt: bool = False, timezone: str = 'auto',
-                         time_format: str = '%d-%m-%Y %H:%M:%S',) -> str | float | datetime.datetime:
+                         time_format: str = '%d-%m-%Y %H:%M:%S') -> str | float | datetime.datetime:
         """
         Get the current time.
 
