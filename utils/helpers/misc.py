@@ -12,16 +12,12 @@ class Misc:
         """
         Get the current time.
 
-        ------
-
         Arguments:
              seconds_only: Whether to only return the number of seconds since the Epoch.
              as_dt: Whether to only return a datetime object.
              timezone: A specific timezone ('UTC', 'America/New_York', 'Europe/London', ...).
                        Defaults to the local timezone.
              time_format: A datetime format ('%d/%m/%Y', '%H:%M:%S', ...). Does not apply if as_dt is True.
-
-        ------
 
         Returns:
             The current time as an object, formatted string, or in seconds only.

@@ -14,8 +14,8 @@ class CommandArgs:
     logs_file: str = None
 
 
-    @staticmethod
-    def define() -> None:
+    @classmethod
+    def define(cls) -> None:
         """ Define the command-line arguments. """
 
         parser = argparse.ArgumentParser()
@@ -47,16 +47,16 @@ class CommandArgs:
             help = 'Set a specific logs file by providing the file path.'
         )
 
-        CommandArgs.parser = parser
+        cls.parser = parser
 
 
-    @staticmethod
-    def parse() -> None:
+    @classmethod
+    def parse(cls) -> None:
         """ Parse the command-line arguments. """
 
-        CommandArgs.args = CommandArgs.parser.parse_args()
-        for key, val in CommandArgs.args.__dict__.items():
-            setattr(CommandArgs, key, val)
+        cls.args = cls.parser.parse_args()
+        for key, val in cls.args.__dict__.items():
+            setattr(cls, key, val)
 
 
 __all__ = ['CommandArgs']

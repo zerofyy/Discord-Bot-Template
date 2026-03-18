@@ -16,7 +16,9 @@ class Emoji:
     question: str = '<:ee:1105122980759081030>'
     loading: str = '<a:ae:1105122946063794246>'
 
+    avatar: str = ''
     command: str = '<:ee:1105509426909171833>'
+    event: str = ''
     language: str = '<:ee:1105122942746112151>'
     time: str = '<:ee:1105509039443562577>'
     pen: str = '<:ee:1105509318247325736>'
@@ -33,6 +35,15 @@ class Emoji:
     user: str = '<:ee:1105509635408019527>'
     like: str = '<:ee:1105122994587697172>'
     dislike: str = '<ee:1105509548460089395>'
+
+    class ext_status:
+        """ Static subclass for extension status emojis. """
+
+        unknown: str = ''
+        registered: str = ''
+        enabled: str = ''
+        disabled: str = ''
+        error: str = ''
 
     class ping:
         """ Static subclass for latency status emojis. """

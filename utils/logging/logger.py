@@ -13,12 +13,12 @@ try:
 
     import discord
 
-    client = Bot().client
+    client = Bot.client
     Text = Coloring.Text
 
     _DEPENDENCIES_AVAILABLE = True
 
-except ImportError as e:
+except ImportError:
     Bot = Misc = Coloring = Emoji = Channels = discord = None
 
     client = None
@@ -33,8 +33,6 @@ class LogLevel:
     def __init__(self, code: str, emoji: str, color_ascii: str, color_hex: int) -> None:
         """
         Create a new LogLevel object.
-
-        ------
 
         Arguments:
              code: The symbol at the start of each log entry.
@@ -53,9 +51,8 @@ class LogLevel:
 
 
 class Logger:
-    """ Singleton class for logging. """
+    """ Static class for logging. """
 
-    _instance: 'Logger' = None
     _is_setup: bool = False
     file: str = None
     get_current_time: callable = None
@@ -68,41 +65,32 @@ class Logger:
     DEFAULT: LogLevel = None
 
 
-    def __new__(cls) -> 'Logger':
-        """ Create an instance of the Logger class or get an already existing instance. """
-
-        if cls._instance is None:
-            cls._instance = super(Logger, cls).__new__(cls)
-
-        return cls._instance
-
-
-    def refresh_globals(self) -> None:
+    @classmethod
+    def refresh_globals(cls) -> None:
         """ Refresh global variables. """
 
         global client, Text
 
         if _DEPENDENCIES_AVAILABLE:
-            client = Bot().client
+            client = Bot.client
             Text = Coloring.Text
-            self.ok('Logger', 'Successfully refreshed global variables.')
+            cls.ok('Logger', 'Successfully refreshed global variables.')
             return
 
-        self.warning('Logger', 'Failed to refresh global variables due to missing dependencies.')
+        cls.warning('Logger', 'Failed to refresh global variables due to missing dependencies.')
 
 
-    def setup(self, new_file: bool = True) -> None:
+    @classmethod
+    def setup(cls, new_file: bool = True) -> None:
         """
         Set up the Logger.
-
-        ------
 
         Arguments:
             new_file: Whether to start a new logs file.
         """
 
-        if self._is_setup:
-            self.warning('Logger', 'Logger is already set up.')
+        if cls._is_setup:
+            cls.warning('Logger', 'Logger is already set up.')
             return
 
         # Set up time function
@@ -110,7 +98,7 @@ class Logger:
             datetime_now = datetime.datetime.now(tz = None).replace(microsecond = 0)
             return datetime_now if as_dt else datetime_now.strftime(time_format)
 
-        self.get_current_time = Misc.get_current_time if _DEPENDENCIES_AVAILABLE else get_current_time
+        cls.get_current_time = Misc.get_current_time if _DEPENDENCIES_AVAILABLE else get_current_time
 
         # Set up log levels
         if _DEPENDENCIES_AVAILABLE:
@@ -123,25 +111,25 @@ class Logger:
         else:
             lvl_info = lvl_ok = lvl_warning = lvl_error = lvl_critical = lvl_default = ['', '', 0]
 
-        self.INFO = LogLevel('[i]', *lvl_info)
-        self.OK = LogLevel('[o]', *lvl_ok)
-        self.WARNING = LogLevel('[!]', *lvl_warning)
-        self.ERROR = LogLevel('[-]', *lvl_error)
-        self.CRITICAL = LogLevel('[X]', *lvl_critical)
-        self.DEFAULT = LogLevel('[_]', *lvl_default)
-        self.ok('Logger', 'Successfully created log levels.')
+        cls.INFO = LogLevel('[i]', *lvl_info)
+        cls.OK = LogLevel('[o]', *lvl_ok)
+        cls.WARNING = LogLevel('[!]', *lvl_warning)
+        cls.ERROR = LogLevel('[-]', *lvl_error)
+        cls.CRITICAL = LogLevel('[X]', *lvl_critical)
+        cls.DEFAULT = LogLevel('[_]', *lvl_default)
+        cls.ok('Logger', 'Successfully created log levels.')
 
         # Start a new logs file
         if new_file:
-            self.new_file()
+            cls.new_file()
 
         # Log uncaught errors before crashing
         def new_excepthook(exc_type, value, traceback):
-            self.critical('Crash Report', f'Type      : {exc_type}\n'
-                                          f'Value     : {value}\n'
-                                          f'Traceback : {traceback}')
+            cls.critical('Crash Report', f'Type      : {exc_type}\n'
+                                         f'Value     : {value}\n'
+                                         f'Traceback : {traceback}')
         sys.excepthook = new_excepthook
-        self.ok('Logger', 'Successfully configured the system exception hook.')
+        cls.ok('Logger', 'Successfully configured the system exception hook.')
 
         # Set up handling for Discord logs
         if _DEPENDENCIES_AVAILABLE:
@@ -169,70 +157,68 @@ class Logger:
                 disc_logger.setLevel(logging.INFO)
                 disc_logger.propagate = False
 
-            self.ok('Logger', 'Successfully configured Discord loggers.')
+            cls.ok('Logger', 'Successfully configured Discord loggers.')
 
         else:
-            self.info('Logger', 'Skipped Discord loggers configuration.')
+            cls.info('Logger', 'Skipped Discord loggers configuration.')
 
         # Set up done
-        self._is_setup = True
-        self.ok('Logger', 'Finished setting up.')
+        cls._is_setup = True
+        cls.ok('Logger', 'Finished setting up.')
 
 
-    def new_file(self) -> None:
+    @classmethod
+    def new_file(cls) -> None:
         """ Start a new logs file. """
 
-        time = self.get_current_time(time_format = '%d-%m-%Y %H-%M-%S')
-        self.file = f'logs/{time}.log'
-        self.ok('Logger', 'Successfully started a new logs file.')
+        time = cls.get_current_time(time_format = '%d-%m-%Y %H-%M-%S')
+        cls.file = f'logs/{time}.log'
+        cls.ok('Logger', 'Successfully started a new logs file.')
 
 
-    def set_file(self, path: str) -> None:
+    @classmethod
+    def set_file(cls, path: str) -> None:
         """
         Change the current logs file.
-
-        ------
 
         Arguments:
              path: Path to the new logs file.
         """
 
         if not Path(path).exists():
-            self.error('Logger', f'Failed to change the logs file to "{path}".')
+            cls.error('Logger', f'Failed to change the logs file to "{path}".')
             return
 
-        self.file = path
-        self.ok('Logger', f'Successfully changed the logs file to "{path}".')
+        cls.file = path
+        cls.ok('Logger', f'Successfully changed the logs file to "{path}".')
 
 
-    def get_level_info(self, level: str) -> tuple[str, str, str, int]:
+    @classmethod
+    def get_level_info(cls, level: str) -> tuple[str, str, str, int]:
         """
         Get information for a specific log level.
 
-        ------
-
         Arguments:
             level: The log level name.
-
-        ------
 
         Returns:
             The log level's code, emoji, ASCII color code, and hexadecimal color code.
         """
 
         level = level.lower()
-        for name, obj in dict(self.__dict__).items():
+        for name, obj in dict(cls.__dict__).items():
             if name.lower() == level and isinstance(obj, LogLevel):
                 return obj.unpack()
 
-        return self.DEFAULT.unpack()
+        return cls.DEFAULT.unpack()
 
 
-    def _log(self, level: str, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def _log(cls, level: str, title: str, message: str, report: bool = False) -> None:
         """ Helper function for making log entries. """
 
-        time = self.get_current_time()
-        code, _, color, _ = self.get_level_info(level)
+        time = cls.get_current_time()
+        code, _, color, _ = cls.get_level_info(level)
 
         time_color, title_color = (Text.li_cyan, Text.li_magenta) if _DEPENDENCIES_AVAILABLE else ('', '')
 
@@ -250,19 +236,20 @@ class Logger:
 
         print(cons_entry)
 
-        if self.file:
-            with open(self.file, 'a', encoding = 'UTF-8') as file:
+        if cls.file:
+            with open(cls.file, 'a', encoding = 'UTF-8') as file:
                 file.write(file_entry)
 
         if report:
-            asyncio.run(self._report(level, title, message))
+            asyncio.run(cls._report(level, title, message))
 
 
-    async def _report(self, level: str, title: str, message: str) -> None:
+    @classmethod
+    async def _report(cls, level: str, title: str, message: str) -> None:
         """ Helper function for sending log entries to Discord. """
 
         if not _DEPENDENCIES_AVAILABLE:
-            self.error('Logger', 'Unable to report logs to Discord due to missing dependencies.')
+            cls.error('Logger', 'Unable to report logs to Discord due to missing dependencies.')
             return
 
         level = level.lower()
@@ -271,120 +258,107 @@ class Logger:
         else:
             channel = client.get_channel(Channels.logs)
 
-        _, emoji, _, color = self.get_level_info(level)
-        embed = discord.Embed(color = color, description = message, timestamp = self.get_current_time(as_dt = True))
+        _, emoji, _, color = cls.get_level_info(level)
+        embed = discord.Embed(color = color, description = message, timestamp = cls.get_current_time(as_dt = True))
         await channel.send(f'### {emoji} {title}', embed = embed)
 
 
-    def info(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def info(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry with an informational message.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('info', title, message, report)
+        cls._log('info', title, message, report)
 
 
-    def ok(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def ok(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry with a message for a successfully finished process.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('ok', title, message, report)
+        cls._log('ok', title, message, report)
 
 
-    def warning(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def warning(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry with a warning message.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('warning', title, message, report)
+        cls._log('warning', title, message, report)
 
 
-    def error(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def error(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry with an error message.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('error', title, message, report)
+        cls._log('error', title, message, report)
 
 
-    def critical(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def critical(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry with a critical error message.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('critical', title, message, report)
+        cls._log('critical', title, message, report)
 
 
-    def log(self, title: str, message: str, report: bool = False) -> None:
+    @classmethod
+    def log(cls, title: str, message: str, report: bool = False) -> None:
         """
         Make a log entry without a specified level.
 
-        ------
-
         Arguments:
             title: Title of the log entry, usually the module from which it is logged.
             message: The log message.
             report: Whether to send the log entry to Discord. Defaults to False.
         """
 
-        self._log('', title, message, report)
+        cls._log('', title, message, report)
 
 
-    def get_path(self, option: str) -> str | None | list[str]:
+    @classmethod
+    def get_path(cls, option: str) -> str | None | list[str]:
         """
         Get paths to log files.
 
-        ------
-
         Options:
-            current: The current logs file.
-
-            last: The previous logs file.
-
+            current: The current logs file. \n
+            last: The previous logs file.   \n
             all: All log files.
-
-        ------
 
         Arguments:
             option: Which log files to retrieve.
-
-        ------
 
         Returns:
             The paths to the selected log files, or None if no files are found.
@@ -396,7 +370,7 @@ class Logger:
 
         match option.lower():
             case 'current':
-                return self.file
+                return cls.file
 
             case 'last':
                 file = max(files, key = lambda x: x.stat().st_ctime)
@@ -406,35 +380,34 @@ class Logger:
                 return [f'logs/{file.name}' for file in files]
 
             case _:
-                self.error(
+                cls.error(
                     'Logger', f'Invalid option "{option}" given for Logger.get_path(option).',
                     report = True
                 )
 
 
-    async def archive(self, path: str) -> None:
+    @classmethod
+    async def archive(cls, path: str) -> None:
         """
         Move a logs file to Discord.
-
-        ------
 
         Arguments:
              path: The logs file path.
         """
 
         if not _DEPENDENCIES_AVAILABLE:
-            self.error('Logger', 'Unable to archive logs due to missing dependencies.')
+            cls.error('Logger', 'Unable to archive logs due to missing dependencies.')
             return
 
         file = Path(path)
         if not file.exists() or not file.is_file():
-            self.error('Logger', f'Invalid path "{path}" given for Logger.archive(path).', report = True)
+            cls.error('Logger', f'Invalid path "{path}" given for Logger.archive(path).', report = True)
             return
 
         channel = client.get_channel(Channels.logs)
         await channel.send(f'### {Emoji.upload} Archived: {file.name}', file = discord.File(file))
 
-        if path != self.file:
+        if path != cls.file:
             os.remove(path)
 
 

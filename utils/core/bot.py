@@ -6,41 +6,33 @@ import dotenv
 
 
 class Bot:
-    """ Singleton wrapper for the Discord client. """
+    """ Static wrapper for the Discord client. """
 
-    _instance: 'Bot' = None
     prefix: str = None
     client: commands.Bot = None
 
 
-    def __new__(cls) -> 'Bot':
-        """ Create an instance of the Bot class or get an already existing instance. """
-        
-        if cls._instance is None:
-            cls._instance = super(Bot, cls).__new__(cls)
-
-        return cls._instance
-
-
-    def setup(self, hook: type[commands.Bot], prefix: str, intents: discord.Intents = discord.Intents.none(),
+    @classmethod
+    def setup(cls, hook: type[commands.Bot], prefix: str, intents: discord.Intents = discord.Intents.none(),
               mentions: discord.AllowedMentions = discord.AllowedMentions.none()) -> None:
         """
         Set up the Discord client.
-
-        ------
 
         Arguments:
             hook: A commands.Bot subclass with a custom setup_hook function.
             prefix: The bot's command prefix.
             intents: The bot's intents. Defaults to all intents disabled.
             mentions: The bot's allowed mentions. Defaults to all mentions disabled.
+
+        Raises:
+            RuntimeError: If the bot is already set up.
         """
 
-        if self.client is not None:
+        if cls.client is not None:
             raise RuntimeError('The bot is already set up.')
 
-        self.prefix = prefix
-        self.client = hook(
+        cls.prefix = prefix
+        cls.client = hook(
             command_prefix = prefix,
             intents = intents,
             allowed_mentions = mentions,
@@ -48,17 +40,20 @@ class Bot:
         )
 
 
-    def run(self, token: str = None) -> None:
+    @classmethod
+    def run(cls, token: str = None) -> None:
         """
         Run the Discord client.
 
-        ------
-
         Arguments:
             token: The Discord client token. Defaults to loading it from the "BOT_TOKEN" environment variable.
+
+        Raises:
+            RuntimeError: If the bot isn't set up.
+            ValueError: If "BOT_TOKEN" is missing from the environment variables.
         """
 
-        if self.client is None:
+        if cls.client is None:
             raise RuntimeError('The bot must be set up before running.')
 
         if token is None:
@@ -68,7 +63,7 @@ class Bot:
             if not token:
                 raise ValueError('BOT_TOKEN not found in environment variables.')
 
-        self.client.run(token)
+        cls.client.run(token)
 
 
 __all__ = ['Bot']

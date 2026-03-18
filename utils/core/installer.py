@@ -27,7 +27,6 @@ except ModuleNotFoundError:
             def __init__(self):
                 pass
 
-
     _PACKAGING_AVAILABLE = False
 
 
@@ -38,8 +37,6 @@ class Installer:
     def check_requirements() -> dict[str, str]:
         """
         Check the module requirements.
-
-        ------
 
         Returns:
              A dictionary with missing or outdated requirements.
@@ -74,12 +71,8 @@ class Installer:
         """
         Check whether a module is installed and up-to-date.
 
-        ------
-
         Arguments:
             module: The python module being checked with optional version specifiers.
-
-        ------
 
         Returns:
             The module, whether it is installed and up-to-date, and information regarding its state.
@@ -105,8 +98,6 @@ class Installer:
         """
         Install a python module.
 
-        ------
-
         Arguments:
              module: The python module to install with optional version specifiers.
         """
@@ -124,8 +115,6 @@ class Installer:
     def update_module(module: str) -> None:
         """
         Update a python module.
-
-        ------
 
         Arguments:
              module: The python module to update with optional version specifiers.
@@ -179,8 +168,6 @@ class Installer:
     def restart(clear_cache: bool = True, cmd_args: list[str] = None) -> None:
         """
         Restart the application.
-
-        ------
 
         Arguments:
             clear_cache: Whether to clear the cache before restarting.
